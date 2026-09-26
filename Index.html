@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1e293b">
+  <title>PRF Estudos</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+
+  <!-- Topbar Fixa -->
+  <header class="topbar">
+    <div>
+      <h1 class="brand-title">PRF Estudos</h1>
+      <p class="brand-subtitle">Seu painel de preparação para a PRF</p>
+    </div>
+    <button class="icon-btn" onclick="openModal('settings-modal')" aria-label="Configurações">⚙️</button>
+  </header>
+
+  <!-- Container Principal das Telas -->
+  <main id="app-container">
+
+    <!-- TELA 1: INÍCIO / DASHBOARD -->
+    <section id="view-home" class="view active">
+      <!-- Cards de Métricas Principais -->
+      <div class="grid-2x2">
+        <div class="card metric-card">
+          <span class="metric-icon">⏱️</span>
+          <div class="metric-info">
+            <span class="metric-value" id="dash-hours-today">0h 00m</span>
+            <span class="metric-label">Hoje</span>
+            <small class="metric-sub" id="dash-hours-total">Total: 0h 00m</small>
+          </div>
+        </div>
+        <div class="card metric-card">
+          <span class="metric-icon">📝</span>
+          <div class="metric-info">
+            <span class="metric-value" id="dash-questions-today">0</span>
+            <span class="metric-label">Questões Hoje</span>
+            <small class="metric-sub" id="dash-questions-total">Total: 0</small>
+          </div>
+        </div>
+        <div class="card metric-card">
+          <span class="metric-icon">🎯</span>
+          <div class="metric-info">
+            <span class="metric-value" id="dash-accuracy">0%</span>
+            <span class="metric-label">Taxa de Acertos</span>
+            <small class="metric-sub" id="dash-accuracy-counts">0 / 0</small>
+          </div>
+        </div>
+        <div class="card metric-card">
+          <span class="metric-icon">🔥</span>
+          <div class="metric-info">
+            <span class="metric-value" id="dash-streak">0 dias</span>
+            <span class="metric-label">Sequência</span>
+            <small class="metric-sub">Foco diário</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Meta Diária -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Meta Diária de Estudo</h3>
+          <button class="btn-text" onclick="setDailyGoal()">Alterar</button>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="goal-progress-bar" style="width: 0%;"></div>
+        </div>
+        <div class="card-footer-info">
+          <span id="goal-text-status">0h 00m / 3h 00m</span>
+          <span id="goal-text-percent" class="badge">0%</span>
+        </div>
+      </div>
+
+      <!-- Progresso do Edital -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Progresso do Edital</h3>
+          <span id="edital-percent-badge" class="badge badge-success">0%</span>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="edital-progress-bar" style="width: 0%;"></div>
+        </div>
+        <div class="stats-summary-row">
+          <div><strong id="edital-concluded">0</strong><small>Concluídos</small></div>
+          <div><strong id="edital-in-progress">0</strong><small>Em Andamento</small></div>
+          <div><strong id="edital-not-started">0</strong><small>Não Iniciados</small></div>
+        </div>
+      </div>
+
+      <!-- Disciplinas Atuais (4 Foco) -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Disciplinas Atuais (Foco)</h3>
+          <button class="btn-text" onclick="openSelectActiveModal()">Configurar</button>
+        </div>
+        <div id="active-subjects-list" class="simple-list">
+          <!-- Renderizado via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TELA 2: DISCIPLINAS -->
+    <section id="view-disciplines" class="view">
+      <div class="card-header border-bottom">
+        <h2>Disciplinas e Edital</h2>
+        <button class="btn btn-primary" onclick="openModal('add-discipline-modal')">+ Nova Disciplina</button>
+      </div>
+      <div id="disciplines-container" class="stack-list">
+        <!-- Renderizado via JS -->
+      </div>
+    </section>
+
+    <!-- TELA ASSUNTOS (SUBTELA DE DISCIPLINAS) -->
+    <section id="view-topics" class="view">
+      <div class="card-header border-bottom">
+        <div>
+          <button class="btn-text" onclick="navTo('disciplines')">← Voltar</button>
+          <h2 id="current-discipline-title">Nome da Disciplina</h2>
+        </div>
+        <button class="btn btn-primary" onclick="openAddTopicModal()">+ Novo Assunto</button>
+      </div>
+      <div id="topics-container" class="stack-list">
+        <!-- Renderizado via JS -->
+      </div>
+    </section>
+
+    <!-- TELA 3: ESTUDAR / CRONÔMETRO -->
+    <section id="view-study" class="view">
+      <div class="card text-center">
+        <h2>Cronômetro de Estudo</h2>
+        <p class="text-muted">Selecione o foco e inicie sua sessão</p>
+
+        <div class="form-group">
+          <label for="timer-discipline">Disciplina</label>
+          <select id="timer-discipline" onchange="onTimerDisciplineChange()">
+            <!-- Renderizado via JS -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="timer-topic">Assunto</label>
+          <select id="timer-topic">
+            <!-- Renderizado via JS -->
+          </select>
+        </div>
+
+        <div class="timer-display" id="timer-display">00:00:00</div>
+
+        <div class="timer-controls">
+          <button id="btn-timer-start" class="btn btn-success" onclick="startTimer()">Iniciar</button>
+          <button id="btn-timer-pause" class="btn btn-warning" onclick="pauseTimer()" style="display:none;">Pausar</button>
+          <button id="btn-timer-finish" class="btn btn-primary" onclick="finishTimer()" style="display:none;">Finalizar</button>
+          <button id="btn-timer-reset" class="btn btn-danger" onclick="resetTimer()">Zerar</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TELA 4: QUESTÕES -->
+    <section id="view-questions" class="view">
+      <div class="card">
+        <h2>Registrar Sessão de Questões</h2>
+        <form id="form-questions" onsubmit="handleSaveQuestions(event)">
+          <div class="form-group">
+            <label for="q-discipline">Disciplina</label>
+            <select id="q-discipline" required onchange="onQuestionsDisciplineChange()">
+              <!-- JS -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="q-topic">Assunto</label>
+            <select id="q-topic" required>
+              <!-- JS -->
+            </select>
+          </div>
+          <div class="grid-2x2">
+            <div class="form-group">
+              <label for="q-hits">Acertos</label>
+              <input type="number" id="q-hits" min="0" value="0" required onchange="calcQuestionsTotal()">
+            </div>
+            <div class="form-group">
+              <label for="q-errors">Erros</label>
+              <input type="number" id="q-errors" min="0" value="0" required onchange="calcQuestionsTotal()">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="q-bank">Banca (Opcional)</label>
+            <input type="text" id="q-bank" placeholder="Ex: CEBRASPE, FGV, FCC" list="banks-list">
+            <datalist id="banks-list">
+              <option value="CEBRASPE">
+              <option value="FGV">
+              <option value="FCC">
+              <option value="AOCP">
+              <option value="IBFC">
+            </datalist>
+          </div>
+          <div class="form-group">
+            <label for="q-date">Data</label>
+            <input type="date" id="q-date" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Salvar Resultado</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- TELA 5: REVISÕES -->
+    <section id="view-reviews" class="view">
+      <div class="card-header border-bottom">
+        <h2>Central de Revisões</h2>
+        <button class="btn btn-primary" onclick="openModal('add-review-modal')">+ Nova Revisão</button>
+      </div>
+      
+      <div class="tab-group">
+        <button class="tab-btn active" onclick="switchReviewTab('today')">Hoje / Atrasadas</button>
+        <button class="tab-btn" onclick="switchReviewTab('upcoming')">Próximas</button>
+        <button class="tab-btn" onclick="switchReviewTab('done')">Concluídas</button>
+      </div>
+
+      <div id="reviews-container" class="stack-list">
+        <!-- Renderizado via JS -->
+      </div>
+    </section>
+
+    <!-- MENU SECUNDÁRIO / EXTRAS (Acessados por botões extras ou atalhos) -->
+    
+    <!-- CADERNO DE ERROS -->
+    <section id="view-errors" class="view">
+      <div class="card-header border-bottom">
+        <h2>Caderno de Erros</h2>
+        <button class="btn btn-primary" onclick="openModal('add-error-modal')">+ Registrar Erro</button>
+      </div>
+      <div id="errors-container" class="stack-list">
+        <!-- JS -->
+      </div>
+    </section>
+
+    <!-- ESTATÍSTICAS E PONTOS FRACOS -->
+    <section id="view-stats" class="view">
+      <h2>Análise e Desempenho</h2>
+      
+      <div class="card">
+        <h3>Diagnóstico de Pontos Fracos</h3>
+        <p class="text-muted"><small>Parâmetro de direcionamento de estudo base de desempenho.</small></p>
+        <div id="weak-points-list" class="stack-list">
+          <!-- JS -->
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Desempenho por Disciplina</h3>
+        <div id="stats-disciplines-list" class="stack-list">
+          <!-- JS -->
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Histórico de Sessões</h3>
+        <div id="history-container" class="stack-list">
+          <!-- JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ASSISTENTE IA -->
+    <section id="view-ai" class="view">
+      <div class="card">
+        <h2>Assistente IA</h2>
+        <div class="alert alert-info">
+          <strong>Assistente IA — integração ainda não configurada.</strong><br>
+          Estrutura pronta para conexão via API de LLM local ou remota.
+        </div>
+        <p class="text-muted">Sugestões de prompts para uso futuro:</p>
+        <ul class="simple-bullets">
+          <li>"O que devo revisar hoje baseado na curva de esquecimento?"</li>
+          <li>"Quais são meus pontos fracos em Legislação de Trânsito?"</li>
+          <li>"Monte um plano de estudos focado no CEBRASPE."</li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Barra de Navegação Inferior Fixa -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="navTo('home')">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Início</span>
+    </button>
+    <button class="nav-item" onclick="navTo('disciplines')">
+      <span class="nav-icon">📚</span>
+      <span class="nav-label">Disciplinas</span>
+    </button>
+    <button class="nav-item" onclick="navTo('study')">
+      <span class="nav-icon">⏱️</span>
+      <span class="nav-label">Estudar</span>
+    </button>
+    <button class="nav-item" onclick="navTo('questions')">
+      <span class="nav-icon">📝</span>
+      <span class="nav-label">Questões</span>
+    </button>
+    <button class="nav-item" onclick="navTo('reviews')">
+      <span class="nav-icon">🔄</span>
+      <span class="nav-label">Revisões</span>
+    </button>
+    <button class="nav-item" onclick="navTo('more')">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Mais</span>
+    </button>
+  </nav>
+
+  <!-- MODAIS E POPUPS -->
+
+  <!-- Modal Mais Opções -->
+  <div id="more-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Mais Opções</h3>
+        <button class="close-btn" onclick="closeModal('more-modal')">&times;</button>
+      </div>
+      <div class="menu-grid">
+        <button class="menu-card" onclick="closeModal('more-modal'); navTo('errors');">
+          <span>📕</span> Caderno de Erros
+        </button>
+        <button class="menu-card" onclick="closeModal('more-modal'); navTo('stats');">
+          <span>📊</span> Estatísticas
+        </button>
+        <button class="menu-card" onclick="closeModal('more-modal'); navTo('ai');">
+          <span>🤖</span> Assistente IA
+        </button>
+        <button class="menu-card" onclick="closeModal('more-modal'); openModal('settings-modal');">
+          <span>⚙️</span> Configurações
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Adicionar Disciplina -->
+  <div id="add-discipline-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Nova Disciplina</h3>
+        <button class="close-btn" onclick="closeModal('add-discipline-modal')">&times;</button>
+      </div>
+      <form onsubmit="handleAddDiscipline(event)">
+        <div class="form-group">
+          <label for="new-disc-name">Nome da Disciplina</label>
+          <input type="text" id="new-disc-name" required placeholder="Ex: Raciocínio Lógico">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Salvar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Adicionar Assunto -->
+  <div id="add-topic-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Novo Assunto</h3>
+        <button class="close-btn" onclick="closeModal('add-topic-modal')">&times;</button>
+      </div>
+      <form onsubmit="handleAddTopic(event)">
+        <div class="form-group">
+          <label for="new-topic-name">Nome do Assunto</label>
+          <input type="text" id="new-topic-name" required placeholder="Ex: Sistema Nacional de Trânsito">
+        </div>
+        <div class="form-group">
+          <label for="new-topic-status">Status Inicial</label>
+          <select id="new-topic-status">
+            <option value="nao_iniciado">Não Iniciado</option>
+            <option value="em_andamento">Em Andamento</option>
+            <option value="concluido">Concluído</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Salvar Assunto</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Selecionar Disciplinas Foco (4) -->
+  <div id="active-disciplines-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Disciplinas Atuais (Até 4)</h3>
+        <button class="close-btn" onclick="closeModal('active-disciplines-modal')">&times;</button>
+      </div>
+      <div id="active-checklist-container" class="stack-list">
+        <!-- JS -->
+      </div>
+      <button class="btn btn-primary btn-block" onclick="saveActiveDisciplines()">Confirmar</button>
+    </div>
+  </div>
+
+  <!-- Modal Adicionar Revisão -->
+  <div id="add-review-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Agendar Revisão</h3>
+        <button class="close-btn" onclick="closeModal('add-review-modal')">&times;</button>
+      </div>
+      <form onsubmit="handleAddReview(event)">
+        <div class="form-group">
+          <label for="rev-disc">Disciplina</label>
+          <select id="rev-disc" required onchange="onReviewDisciplineChange()"></select>
+        </div>
+        <div class="form-group">
+          <label for="rev-topic">Assunto</label>
+          <select id="rev-topic" required></select>
+        </div>
+        <div class="form-group">
+          <label for="rev-date">Data Prevista</label>
+          <input type="date" id="rev-date" required>
+        </div>
+        <div class="form-group">
+          <label for="rev-obs">Observação (Opcional)</label>
+          <input type="text" id="rev-obs" placeholder="Ex: Focar nas exceções da regra">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Salvar Revisão</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Caderno de Erros -->
+  <div id="add-error-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Registrar Erro de Questão</h3>
+        <button class="close-btn" onclick="closeModal('add-error-modal')">&times;</button>
+      </div>
+      <form onsubmit="handleAddError(event)">
+        <div class="form-group">
+          <label for="err-disc">Disciplina</label>
+          <select id="err-disc" required onchange="onErrorDisciplineChange()"></select>
+        </div>
+        <div class="form-group">
+          <label for="err-topic">Assunto</label>
+          <select id="err-topic" required></select>
+        </div>
+        <div class="form-group">
+          <label for="err-question">Questão / Enunciado resumido</label>
+          <textarea id="err-question" rows="2" required placeholder="Resumo do item ou questão..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="err-reason">Motivo do Erro</label>
+          <input type="text" id="err-reason" required placeholder="Ex: Falta de atenção na pegadinha 'exceto'">
+        </div>
+        <div class="form-group">
+          <label for="err-explanation">Explicação / Fundamento</label>
+          <textarea id="err-explanation" rows="3" required placeholder="Artigo de lei, regra gramatical, etc."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Salvar no Caderno</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Configurações & Backup -->
+  <div id="settings-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Configurações e Backup</h3>
+        <button class="close-btn" onclick="closeModal('settings-modal')">&times;</button>
+      </div>
+      <div class="stack-list">
+        <div>
+          <h4>Gerenciamento de Dados</h4>
+          <button class="btn btn-primary btn-block" onclick="exportData()">Exportar Backup (JSON)</button>
+        </div>
+        <div>
+          <label for="import-file" class="btn btn-secondary btn-block">Importar Backup (JSON)</label>
+          <input type="file" id="import-file" accept=".json" onchange="importData(event)" style="display:none;">
+        </div>
+        <hr>
+        <div>
+          <h4 class="text-danger">Zona de Perigo</h4>
+          <button class="btn btn-danger btn-block" onclick="resetAllData()">Apagar Todos os Dados</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+  </html>
